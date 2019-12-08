@@ -5,24 +5,9 @@ export class Animate implements IAnimate {
 
 
     /**
-     * Вызов анимации перехода вверх
+     * Вызов анимации перехода
      */
-    public moveUp(dog, y, duration) {
-        const tween = new Konva.Tween({
-            node: dog,
-            y: y,
-            easing: Konva.Easings.StrongEaseInOut,
-            duration: duration
-          })
-
-          tween.play()
-    }
-
-
-    /**
-     * Вызов анимации перехода вниз
-     */
-    public moveDown(dog, y, duration) {
+    public move(dog, y, duration) {
         const tween = new Konva.Tween({
             node: dog,
             y: y,

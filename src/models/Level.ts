@@ -32,7 +32,6 @@ type TModelsObject = {
 export class Level implements ILevel {
 
     private speed: number = 500
-    private _location: string
     public pipes: any = []
     public roadLines: number[]
     public assets: TModelsObject = {}
@@ -61,16 +60,28 @@ export class Level implements ILevel {
         this.stage = stage
 
 
-        this.loadBackground()
+        this.startGame()
+    }
+
+    async startGame() {
+        await this.drawBackground()
+        this.drawPipes()
+        this.drawGifts()
+        this.dog.loadingModel()
+        this.drawLives()
+        this.drawCounterText()
+        this.moveBackground()
+        this.layer.batchDraw()
     }
 
     public moveBackground() {
         const anim = new Konva.Animation((frame) => {
             const left = -this.speed * (frame.timeDiff / 1000)
             if (-this.assets.park.attrs.x >= this.assets.park.width() + this.stage.width()) {
+
                 this.assets.park.move({x: this.assets.park.width(), y: 0})
                 this.assets.park2.move({x: this.assets.park.width(), y: 0})
-                    this.drawPipes()
+                    this.drawPipes()//когда локация закончилась идет рендер новых моделей и игра тормозит на 1с
                     this.drawGifts()
                     this.speed += 100
             } else {
@@ -82,6 +93,56 @@ export class Level implements ILevel {
         }, this.layer)
         this.anim = anim
         anim.start()
+    }
+
+    loadAsset(imageSrc, x, y, width, height, nameModel) {
+        const image = new Image()
+        image.src = `data:image/png;base64,${imageSrc.toString('base64')}`
+        const imageModel = new Konva.Image({ x, y, image, width, height, name: nameModel })
+        this.assets[nameModel] = imageModel
+        this.layer.add(imageModel)
+        return imageModel
+    }
+
+    drawBackground() {
+        return new Promise(res => {
+            const image = new Image()
+            image.src = `data:image/png;base64,${road.toString('base64')}`
+            image.onload = () => {
+                const scale = Math.max(this.stage.width() / image.width, this.stage.height() / image.height)
+                const y = (this.stage.height() / 2) - (image.height / 2) * scale
+                const width = image.width * scale
+                const height = image.height * scale
+                
+                const imageModel = new Konva.Image({ x: 0, y, image, width, height, name: 'park' })
+                this.assets['park'] = imageModel
+                this.layer.add(imageModel)
+                const imageModel2 = new Konva.Image({ x: width, y, image, width, height, name: 'park2' })
+                this.assets['park2'] = imageModel2
+                this.layer.add(imageModel2)
+                res()
+            }
+        })
+    }
+
+    drawLives() {
+        this.lives.push(this.loadAsset(heart, 20, 30, 48, 48, 'heart'))
+        this.lives.push(this.loadAsset(heart, 90, 30, 48, 48, 'heart'))
+        this.lives.push(this.loadAsset(heart, 160, 30, 48, 48, 'heart'))
+    }
+
+    drawCounterText() {
+        this.complexText = new Konva.Text({
+            x: this.stage.width() - 100,
+            y: 10,
+            text: '0',
+            fontSize: 48,
+            fontFamily: 'Arial',
+            fill: '#fff',
+            width: 300,
+            padding: 20
+        })
+        this.layer.add(this.complexText)
     }
 
     public movePipes(block) {
@@ -107,7 +168,6 @@ export class Level implements ILevel {
                 this.dog.clash()
                 const time = setTimeout(() => { 
                     clearTimeout(time)
-                    // block.destroy()
                     this.pipesFunctions.map(pipe => {
                         pipe.block.destroy()
                     })
@@ -132,7 +192,6 @@ export class Level implements ILevel {
 
         function stop() {
             anim.stop()
-            // clearInterval(timeId)
         }
         function start() {
             anim.start()
@@ -208,6 +267,7 @@ export class Level implements ILevel {
     }
 
     generateX() {
+        console.log(this.assets);
         const random = Math.round(Math.random() * (Math.round(this.assets.park.width()) - Math.round(this.stage.width() * 2)) + Math.round(this.stage.width() * 2))
         for (let i = 0; i <= this.pipesFunctions.length - 1; i++) {
             const modelWidth = 310
@@ -264,7 +324,6 @@ export class Level implements ILevel {
 
     public moveGifts(block) {
         const anim = new Konva.Animation((frame) => {
-            //TODO: СДЕЛАТЬ ЛОГИКУ получения очко
             const dogX = this.dog.dogModelImage.attrs.x
             const dogY = this.dog.dogModelImage.attrs.y
             const dogWidth = (this.isMobile) ? 0 : 240
@@ -293,58 +352,5 @@ export class Level implements ILevel {
             start,
             block
         }
-    }
-
-    loadAsset(imageSrc, x, y, width, height, nameModel) {
-        const image = new Image()
-        image.src = `data:image/png;base64,${imageSrc.toString('base64')}`
-        const imageModel = new Konva.Image({ x, y, image, width, height, name: nameModel })
-        this.assets[nameModel] = imageModel
-        this.layer.add(imageModel)
-        return imageModel
-    }
-
-    loadBackground() {
-        //TODO::разбить на методы и раскинуть по классам(скорее всего), чтобы сначала была синхронная загрузка файлов, а потом уже раскидка по слоям
-        const image = new Image()
-        image.src = `data:image/png;base64,${road.toString('base64')}`
-        image.onload = () => {
-        const scale = Math.max(this.stage.width() / image.width, this.stage.height() / image.height)
-        const y = (this.stage.height() / 2) - (image.height / 2) * scale
-        const width = image.width * scale
-        const height = image.height * scale
-        const imageModel = new Konva.Image({ x: 0, y, image, width, height })
-        const imageModel2 = new Konva.Image({ x: width + 0, y, image, width, height })
-        this.assets['park'] = imageModel
-        this.assets['park2'] = imageModel2
-        this.layer.add(imageModel)
-        this.layer.add(imageModel2)
-        this.drawPipes()
-        this.drawGifts()
-        this.moveBackground()
-        this.dog.loadingModel()
-        this.dog.dogModelImage.setZIndex(5)
-        this.complexText = new Konva.Text({
-            x: this.stage.width() - 200,
-            y: 10,
-            text: '0',
-            fontSize: 48,
-            fontFamily: 'Arial',
-            fill: '#fff',
-            width: 300,
-            padding: 20,
-            align: 'center'
-          })
-          this.drawLives()
-          this.layer.add(this.complexText)
-            this.layer.batchDraw()
-        }
-        
-    }
-
-    drawLives() {
-        this.lives.push(this.loadAsset(heart, 20, 30, 48, 48, 'heart'))
-        this.lives.push(this.loadAsset(heart, 90, 30, 48, 48, 'heart'))
-        this.lives.push(this.loadAsset(heart, 160, 30, 48, 48, 'heart'))
     }
 }

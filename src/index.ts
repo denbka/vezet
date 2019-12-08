@@ -9,11 +9,9 @@ import { Game, Dog, Animate, Level, Person } from './models'
 
   let mobile = true
   if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)) {
-    console.log('12312312321');
-      // код для мобильных устройств
+    console.log('isMobile');
     } else {
       mobile = false
-      // код для обычных устройств
   }
 
     const width = window.innerWidth
@@ -39,8 +37,6 @@ import { Game, Dog, Animate, Level, Person } from './models'
     const level = new Level(stage, layer, dog, roadLines, mobile)
     const animate = new Animate()
     const person = new Person()
-    // dog.dogModelImage.setZIndex(5)
-    // layer.batchDraw()
 
     const game = new Game(
       stage,

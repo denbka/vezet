@@ -40,69 +40,51 @@ export class Dog implements IDog {
         this.stage = stage
         this.roadLines = roadLines
         this.animate = new Animate()
-        const that = this
-        this.listener = function (e) {
+        this.listener = (e) => {
             console.log(e);
             switch (e.keyCode) {
-                case 87: that.down(); break;
-                case 83: that.up(); break;
-                case 38: that.down(); break;
-                case 40: that.up(); break;
+                case 87: this.up(); break;
+                case 83: this.down(); break;
+                case 38: this.up(); break;
+                case 40: this.down(); break;
             }
         }
         document.addEventListener('keydown', this.listener)
     }
 
     up() {
-        if (this.currentLine != 2) {
-            this.currentLine++
-            document.removeEventListener('keydown', this.listener)
-            this.animate.moveDown(this.dog, this.roadLines[this.currentLine], this.duration)
-            this.dog.animation('down')
-            const time = setTimeout(() => {
-                this.dog.animation('run1')
-                this.layer.batchDraw()
-                clearTimeout(time)
-                document.addEventListener('keydown', this.listener)
-            }, this.duration * 1000)
-            this.layer.batchDraw()
+        if (this.currentLine != 0) {
+            this.currentLine--
+            this.setAnimate('up')
         }
     }
 
     down() {
-        if (this.currentLine != 0) {
-            this.currentLine--
-            document.removeEventListener('keydown', this.listener)
-            this.animate.moveDown(this.dog, this.roadLines[this.currentLine], this.duration)
-            this.dog.animation('up')
-            const time = setTimeout(() => {
-                this.dog.animation('run1')
-                this.layer.batchDraw()
-                clearTimeout(time)
-                document.addEventListener('keydown', this.listener)
-            }, this.duration * 1000)
-            this.layer.batchDraw()
+        if (this.currentLine != 2) {
+            this.currentLine++
+            this.setAnimate('down')
         }
     }
 
     clash() {
-        document.removeEventListener('keydown', this.listener)
         this.animate.clash(this.dog)
-        this.dog.animation('clash')
+        this.setAnimate('clash')
+    }
+
+    setAnimate(animationName) {
+        document.removeEventListener('keydown', this.listener)
+        this.animate.move(this.dog, this.roadLines[this.currentLine], this.duration)
+        this.dog.animation(animationName)
         const time = setTimeout(() => {
             this.dog.animation('run1')
             this.layer.batchDraw()
             clearTimeout(time)
             document.addEventListener('keydown', this.listener)
-        }, 400)
+        }, this.duration * 1000)
         this.layer.batchDraw()
     }
     
-    run() {
-        // animate.run(this.dogModelImage, this.layer)
-    }
-
-    private loadingModel() {
+    loadingModel() {
 
         const animations = {
             clash: [],
@@ -140,11 +122,7 @@ export class Dog implements IDog {
                 animations.run1.push(270 * i, 270*3, 260, 260)
             }
         }
-
         
-        // for (let i = 0; i <= 180; i++) {
-        //     animations.run2.push(270 * i, 280*4, 260, 260)
-        // }
         this.image = new Image()
         this.image.src = `data:image/png;base64,${sprites.toString('base64')}`
         this.dog = new Konva.Sprite({
@@ -164,11 +142,8 @@ export class Dog implements IDog {
         })
         this.dogModelImage = this.dog
         this.layer.add(this.dog)
-        // dog.setZIndex(100)
+        this.dogModelImage.setZIndex(5)
         this.dog.start()
-
-        // dog.animation('clash')
-        // this.layer.draw()
     }
 
 }

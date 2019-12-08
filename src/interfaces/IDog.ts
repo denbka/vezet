@@ -4,5 +4,7 @@ export default interface IDog {
     image: HTMLImageElement
     up(): void
     down(): void
-    run(dogModel, layer): void
+    clash(): void
+    setAnimate(animationName): void
+    loadingModel(): void
 }
